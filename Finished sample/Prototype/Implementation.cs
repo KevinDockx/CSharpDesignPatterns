@@ -1,64 +1,51 @@
 ﻿using System.Text.Json;
 
-namespace Prototype
+namespace Prototype;
+
+/// <summary>
+/// Prototype
+/// </summary>
+public abstract class Person
 {
-    /// <summary>
-    /// Prototype
-    /// </summary>
-    public abstract class Person
+    public abstract string Name { get; set; }
+
+    public abstract Person Clone(bool deepClone);
+}
+
+/// <summary>
+/// ConcretePrototype1
+/// </summary>
+public class Manager(string name) : Person
+{
+    public override string Name { get; set; } = name;
+
+    public override Person Clone(bool deepClone = false)
     {
-        public abstract string Name { get; set; }
+        if (deepClone)
+        {     
+            var objectAsJson = JsonSerializer.Serialize(this);
+            return JsonSerializer.Deserialize<Manager>(objectAsJson); 
+        }
 
-        public abstract Person Clone(bool deepClone);
+        return (Person)MemberwiseClone();
     }
+}
 
-    /// <summary>
-    /// ConcretePrototype1
-    /// </summary>
-    public class Manager : Person
-    {
-        public override string Name { get; set; }
+/// <summary>
+/// ConcretePrototype2
+/// </summary>
+public class Employee(string name, Manager manager) : Person
+{
+    public Manager Manager { get; set; } = manager;
+    public override string Name { get; set; } = name;
 
-        public Manager(string name)
+    public override Person Clone(bool deepClone = false)
+    {   
+        if (deepClone)
         {
-            Name = name;
+            var objectAsJson = JsonSerializer.Serialize(this);
+            return JsonSerializer.Deserialize<Employee>(objectAsJson);
         }
-
-        public override Person Clone(bool deepClone = false)
-        {
-            if (deepClone)
-            {     
-                var objectAsJson = JsonSerializer.Serialize(this);
-                return JsonSerializer.Deserialize<Manager>(objectAsJson); 
-            }
-
-            return (Person)MemberwiseClone();
-        }
+        return (Person)MemberwiseClone();
     }
-
-    /// <summary>
-    /// ConcretePrototype2
-    /// </summary>
-    public class Employee : Person
-    {
-        public Manager Manager { get; set; }
-        public override string Name { get; set; }
-
-        public Employee(string name, Manager manager)
-        {
-            Name = name;
-            Manager = manager;
-        }
-
-        public override Person Clone(bool deepClone = false)
-        {   
-            if (deepClone)
-            {
-                var objectAsJson = JsonSerializer.Serialize(this);
-                return JsonSerializer.Deserialize<Employee>(objectAsJson);
-            }
-            return (Person)MemberwiseClone();
-        }
-    }
-
 }

@@ -1,138 +1,124 @@
-﻿namespace Visitor
+﻿namespace Visitor;
+
+/// <summary>
+/// ConcreteElement
+/// </summary>
+public class Customer(string name, decimal amountOrdered) : IElement
 {
-    /// <summary>
-    /// ConcreteElement
-    /// </summary>
-    public class Customer : IElement
+    public decimal AmountOrdered { get; private set; } = amountOrdered;
+    public decimal Discount { get; set; }
+    public string Name { get; private set; } = name;
+
+    public void Accept(IVisitor visitor)
     {
-        public decimal AmountOrdered { get; private set; }
-        public decimal Discount { get; set; }
-        public string Name { get; private set; }
+        // visitor.VisitCustomer(this);
+        visitor.Visit(this);
+        Console.WriteLine($"Visited {nameof(Customer)} {Name}, " +
+            $"discount given: {Discount}");
+    }
+}
 
-        public Customer(string name, decimal amountOrdered)
+/// <summary>
+/// ConcreteElement
+/// </summary>
+public class Employee(string name, int yearsEmployed) : IElement
+{
+    public int YearsEmployed { get; private set; } = yearsEmployed;
+    public decimal Discount { get; set; }
+    public string Name { get; private set; } = name;
+
+    public void Accept(IVisitor visitor)
+    {
+        // visitor.VisitEmployee(this);
+        visitor.Visit(this);
+        Console.WriteLine($"Visited {nameof(Employee)} " +
+            $"{Name}, discount given: {Discount}");
+    }
+}
+
+///// <summary>
+///// Visitor
+///// </summary>
+//public interface IVisitor
+//{
+//    void VisitCustomer(Customer customer);
+//    void VisitEmployee(Employee employee);
+//}
+
+/// <summary>
+/// Visitor (alternative)
+/// </summary>
+public interface IVisitor
+{
+    void Visit(IElement element);
+}
+
+
+/// <summary>
+/// Element
+/// </summary>
+public interface IElement
+{
+    void Accept(IVisitor visitor);
+}
+
+/// <summary>
+/// ConcreteVisitor
+/// </summary>
+public class DiscountVisitor : IVisitor
+{
+    public decimal TotalDiscountGiven { get; set; }
+
+    public void Visit(IElement element)
+    {
+        if (element is Customer customer)
         {
-            Name = name;
-            AmountOrdered = amountOrdered;
+            VisitCustomer(customer);
         }
-
-        public void Accept(IVisitor visitor)
+        else if (element is Employee employee)
         {
-            // visitor.VisitCustomer(this);
-            visitor.Visit(this);
-            Console.WriteLine($"Visited {nameof(Customer)} {Name}, " +
-                $"discount given: {Discount}");
+            VisitEmployee(employee);
         }
     }
 
-    /// <summary>
-    /// ConcreteElement
-    /// </summary>
-    public class Employee : IElement
+    private void VisitCustomer(Customer customer)
     {
-        public int YearsEmployed { get; private set; }
-        public decimal Discount { get; set; }
-        public string Name { get; private set; }
-
-        public Employee(string name, int yearsEmployed)
-        {
-            Name = name;
-            YearsEmployed = yearsEmployed;
-        }
-
-        public void Accept(IVisitor visitor)
-        {
-            // visitor.VisitEmployee(this);
-            visitor.Visit(this);
-            Console.WriteLine($"Visited {nameof(Employee)} " +
-                $"{Name}, discount given: {Discount}");
-        }
+        // percentage of total amount
+        var discount = customer.AmountOrdered / 10;
+        // set it on the customer
+        customer.Discount = discount;
+        // add it to the total amount
+        TotalDiscountGiven += discount;
     }
 
-    ///// <summary>
-    ///// Visitor
-    ///// </summary>
-    //public interface IVisitor
-    //{
-    //    void VisitCustomer(Customer customer);
-    //    void VisitEmployee(Employee employee);
-    //}
-
-    /// <summary>
-    /// Visitor (alternative)
-    /// </summary>
-    public interface IVisitor
+    private void VisitEmployee(Employee employee)
     {
-        void Visit(IElement element);
+        // fixed value depending on the amount of years employed
+        var discount = employee.YearsEmployed < 10 ? 100 : 200;
+        // set it on the employee
+        employee.Discount = discount;
+        // add it to the total amount
+        TotalDiscountGiven += discount;
     }
+}
 
+/// <summary>
+/// ObjectStructure
+/// </summary>
+public class Container
+{
+    public List<Employee> Employees { get; set; } = [];
+    public List<Customer> Customers { get; set; } = [];
 
-    /// <summary>
-    /// Element
-    /// </summary>
-    public interface IElement
+    public void Accept(IVisitor visitor)
     {
-        void Accept(IVisitor visitor);
-    }
-
-    /// <summary>
-    /// ConcreteVisitor
-    /// </summary>
-    public class DiscountVisitor : IVisitor
-    {
-        public decimal TotalDiscountGiven { get; set; }
-
-        public void Visit(IElement element)
+        foreach (var employee in Employees)
         {
-            if (element is Customer)
-            {
-                VisitCustomer((Customer)element);
-            }
-            else if (element is Employee)
-            {
-                VisitEmployee((Employee)element);
-            }
+            employee.Accept(visitor);
         }
-
-        private void VisitCustomer(Customer customer)
+        foreach (var customer in Customers)
         {
-            // percentage of total amount
-            var discount = customer.AmountOrdered / 10;
-            // set it on the customer
-            customer.Discount = discount;
-            // add it to the total amount
-            TotalDiscountGiven += discount;
-        }
-
-        private void VisitEmployee(Employee employee)
-        {
-            // fixed value depending on the amount of years employed
-            var discount = employee.YearsEmployed < 10 ? 100 : 200;
-            // set it on the employee
-            employee.Discount = discount;
-            // add it to the total amount
-            TotalDiscountGiven += discount;
+            customer.Accept(visitor);
         }
     }
-
-    /// <summary>
-    /// ObjectStructure
-    /// </summary>
-    public class Container
-    {
-        public List<Employee> Employees { get; set; } = new();
-        public List<Customer> Customers { get; set; } = new();
-
-        public void Accept(IVisitor visitor)
-        {
-            foreach (var employee in Employees)
-            {
-                employee.Accept(visitor);
-            }
-            foreach (var customer in Customers)
-            {
-                customer.Accept(visitor);
-            }
-        }
-    }
-
 }

@@ -1,119 +1,108 @@
 ﻿using System.Text;
 
-namespace BuilderPattern
+namespace BuilderPattern;
+
+/// <summary>
+/// Product
+/// </summary>
+public class Car(string carType)
 {
-    /// <summary>
-    /// Product
-    /// </summary>
-    public class Car
+    private readonly List<string> _parts = [];
+    private readonly string _carType = carType;
+
+    public void AddPart(string part)
     {
-        private readonly List<string> _parts = new();
-        private readonly string _carType;
-
-        public Car(string carType)
-        {
-            _carType = carType;
-        }
-
-        public void AddPart(string part)
-        {
-            _parts.Add(part);
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            foreach (string part in _parts)
-            {
-                sb.Append($"Car of type {_carType} has part {part}. ");
-            }
-
-            return sb.ToString();
-        }
+        _parts.Add(part);
     }
 
-    /// <summary>
-    /// Builder  
-    /// </summary>
-    public abstract class CarBuilder
+    public override string ToString()
     {
-        public Car Car { get; private set; }
-
-        public CarBuilder(string carType)
+        var sb = new StringBuilder();
+        foreach (string part in _parts)
         {
-            Car = new Car(carType);
+            sb.Append($"Car of type {_carType} has part {part}. ");
         }
 
-        public abstract void BuildEngine();
-        public abstract void BuildFrame();
+        return sb.ToString();
+    }
+}
+
+/// <summary>
+/// Builder  
+/// </summary>
+public abstract class CarBuilder(string carType)
+{
+    public Car Car { get; private set; } = new Car(carType);
+
+    public abstract void BuildEngine();
+    public abstract void BuildFrame();
+}
+
+/// <summary>
+/// ConcreteBuilder1 class
+/// </summary>
+public class MiniBuilder : CarBuilder
+{
+    public MiniBuilder()
+        : base("Mini")
+    {
     }
 
-    /// <summary>
-    /// ConcreteBuilder1 class
-    /// </summary>
-    public class MiniBuilder : CarBuilder
+    public override void BuildEngine()
     {
-        public MiniBuilder()
-            : base("Mini")
-        {
-        }
-
-        public override void BuildEngine()
-        {
-            Car.AddPart("'not a V8'");
-        }
-
-        public override void BuildFrame()
-        {
-            Car.AddPart("'3-door with stripes'");
-        }
+        Car.AddPart("'not a V8'");
     }
 
-    /// <summary>
-    /// ConcreteBuilder2 class
-    /// </summary>
-    public class BMWBuilder : CarBuilder
+    public override void BuildFrame()
     {
-        // Invoke base class constructor
-        public BMWBuilder()
-            : base("BMW")
-        {
-        }
+        Car.AddPart("'3-door with stripes'");
+    }
+}
 
-        public override void BuildEngine()
-        {
-            Car.AddPart("'a fancy V8 engine'");
-        }
-
-        public override void BuildFrame()
-        {
-            Car.AddPart("'5-door with metallic finish'");
-        }
+/// <summary>
+/// ConcreteBuilder2 class
+/// </summary>
+public class BMWBuilder : CarBuilder
+{
+    // Invoke base class constructor
+    public BMWBuilder()
+        : base("BMW")
+    {
     }
 
-    /// <summary>
-    /// Director
-    /// </summary>
-    public class Garage
+    public override void BuildEngine()
     {
-        private CarBuilder? _builder;
-
-        public Garage()
-        {
-        }
-
-        public void Construct(CarBuilder builder)
-        {
-            _builder = builder;
-
-            _builder.BuildEngine();
-            _builder.BuildFrame();
-        }
-
-        public void Show()
-        {
-            Console.WriteLine(_builder?.Car.ToString());
-        }
-
+        Car.AddPart("'a fancy V8 engine'");
     }
+
+    public override void BuildFrame()
+    {
+        Car.AddPart("'5-door with metallic finish'");
+    }
+}
+
+/// <summary>
+/// Director
+/// </summary>
+public class Garage
+{
+    private CarBuilder? _builder;
+
+    public Garage()
+    {
+    }
+
+    public void Construct(CarBuilder builder)
+    {
+        _builder = builder;
+
+        _builder.BuildEngine();
+        _builder.BuildFrame();
+    }
+
+    public void Show()
+    {
+        Console.WriteLine(_builder?.Car.ToString());
+    }
+
 }

@@ -1,70 +1,54 @@
-﻿namespace Composite
+﻿namespace Composite;
+
+/// <summary>
+/// Component
+/// </summary>
+public abstract class FileSystemItem(string name)
 {
-    /// <summary>
-    /// Component
-    /// </summary>
-    public abstract class FileSystemItem
+    public string Name { get; set; } = name;
+
+    public abstract long GetSize();
+}
+
+/// <summary>
+/// Leaf
+/// </summary>
+public class File(string name, long size) : FileSystemItem(name)
+{
+    private readonly long _size = size;
+
+    public override long GetSize()
     {
-        public string Name { get; set; }
+        return _size;
+    }
+}
 
-        public abstract long GetSize();
+/// <summary>
+/// Composite
+/// </summary>
+public class Directory(string name, long size) : FileSystemItem(name)
+{
+    private readonly List<FileSystemItem> _fileSystemItems = [];
 
-        public FileSystemItem(string name)
-        {
-            Name = name;
-        }
+    private readonly long _size = size;
+
+    public void Add(FileSystemItem itemToAdd)
+    {
+        _fileSystemItems.Add(itemToAdd);
     }
 
-    /// <summary>
-    /// Leaf
-    /// </summary>
-    public class File : FileSystemItem
+    public void Remove(FileSystemItem itemToRemove)
     {
-        private long _size;
-        public File(string name, long size) : base(name)
-        {
-            _size = size;
-        }
-
-        public override long GetSize()
-        {
-            return _size;
-        }
+        _fileSystemItems.Remove(itemToRemove);
     }
 
-    /// <summary>
-    /// Composite
-    /// </summary>
-    public class Directory : FileSystemItem
+    public override long GetSize()
     {
-        private List<FileSystemItem> _fileSystemItems = new List<FileSystemItem>();
-
-        private long _size;
-        public Directory(string name, long size) : base(name)
+        var treeSize = _size;
+        foreach (var fileSystemItem in _fileSystemItems)
         {
-            _size = size;
+            treeSize += fileSystemItem.GetSize();
         }
-
-        public void Add(FileSystemItem itemToAdd)
-        {
-            _fileSystemItems.Add(itemToAdd);
-        }
-
-        public void Remove(FileSystemItem itemToRemove)
-        {
-            _fileSystemItems.Remove(itemToRemove);
-        }
-
-        public override long GetSize()
-        {
-            var treeSize = _size;
-            foreach (var fileSystemItem in _fileSystemItems)
-            {
-                treeSize += fileSystemItem.GetSize();
-            }
-            return treeSize;
-        }
+        return treeSize;
     }
-
-
 }

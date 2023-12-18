@@ -1,131 +1,117 @@
-﻿namespace Mediator
+﻿namespace Mediator;
+
+//public abstract class ChatRoom
+//{
+//    public abstract void Register(TeamMember teamMember);
+//    public abstract void Send(string from, string message);
+//}
+
+/// <summary>
+/// Mediator
+/// </summary>
+public interface IChatRoom
 {
-    //public abstract class ChatRoom
-    //{
-    //    public abstract void Register(TeamMember teamMember);
-    //    public abstract void Send(string from, string message);
-    //}
+    void Register(TeamMember teamMember);
+    void Send(string from, string message);
+    void Send(string from, string to, string message);
+    void SendTo<T>(string from, string message) where T : TeamMember;
 
-    /// <summary>
-    /// Mediator
-    /// </summary>
-    public interface IChatRoom
+
+}
+
+/// <summary>
+/// Colleague
+/// </summary>
+public abstract class TeamMember(string name)
+{
+    private IChatRoom? _chatroom;
+    public string Name { get; set; } = name;
+
+    internal void SetChatroom(IChatRoom chatRoom)
     {
-        void Register(TeamMember teamMember);
-        void Send(string from, string message);
-        void Send(string from, string to, string message);
-        void SendTo<T>(string from, string message) where T : TeamMember;
-
-
+        _chatroom = chatRoom;
+    }
+    public void Send(string to, string message)
+    {
+        _chatroom?.Send(Name, to, message);
     }
 
-    /// <summary>
-    /// Colleague
-    /// </summary>
-    public abstract class TeamMember
+    public void SendTo<T>(string message) where T : TeamMember
     {
-        private IChatRoom? _chatroom;
-        public string Name { get; set; }
-        public TeamMember(string name)
-        {
-            Name = name;
-        }
-
-        internal void SetChatroom(IChatRoom chatRoom)
-        {
-            _chatroom = chatRoom;
-        }
-        public void Send(string to, string message)
-        {
-            _chatroom?.Send(Name, to, message);
-        }
-
-        public void SendTo<T>(string message) where T : TeamMember
-        {
-            _chatroom?.SendTo<T>(Name, message);
-        }
-
-        public void Send(string message)
-        {
-            _chatroom?.Send(Name, message);
-        }
-
-        public virtual void Receive(string from, string message)
-        {
-            Console.WriteLine($"Message {from} to {Name}: {message}");
-        }
+        _chatroom?.SendTo<T>(Name, message);
     }
 
-    /// <summary>
-    /// ConcreteColleague
-    /// </summary>
-    public class Lawyer : TeamMember
+    public void Send(string message)
     {
-        public Lawyer(string name) : base(name)
-        {
-        }
-
-        public override void Receive(string from, string message)
-        {
-            Console.WriteLine($"{nameof(Lawyer)} {Name} received: ");
-            base.Receive(from, message);
-        }
+        _chatroom?.Send(Name, message);
     }
 
-    /// <summary>
-    /// ConcreteColleague
-    /// </summary>
-    public class AccountManager : TeamMember
+    public virtual void Receive(string from, string message)
     {
-        public AccountManager(string name) : base(name)
-        {
-        }
+        Console.WriteLine($"Message {from} to {Name}: {message}");
+    }
+}
 
-        public override void Receive(string from, string message)
+/// <summary>
+/// ConcreteColleague
+/// </summary>
+public class Lawyer(string name) : TeamMember(name)
+{
+    public override void Receive(string from, string message)
+    {
+        Console.WriteLine($"{nameof(Lawyer)} {Name} received: ");
+        base.Receive(from, message);
+    }
+}
+
+/// <summary>
+/// ConcreteColleague
+/// </summary>
+public class AccountManager(string name) : TeamMember(name)
+{
+    public override void Receive(string from, string message)
+    {
+        Console.WriteLine($"{nameof(AccountManager)} {Name} received: ");
+        base.Receive(from, message);
+    }
+}
+
+
+/// <summary>
+/// ConcreteMediator
+/// </summary>
+public class TeamChatRoom : IChatRoom
+{
+    private readonly Dictionary<string, TeamMember> _teamMembers = [];
+
+    public void Register(TeamMember teamMember)
+    {
+        teamMember.SetChatroom(this);
+        if (!_teamMembers.ContainsKey(teamMember.Name))
         {
-            Console.WriteLine($"{nameof(AccountManager)} {Name} received: ");
-            base.Receive(from, message);
+            _teamMembers.Add(teamMember.Name, teamMember);
         }
     }
 
-
-    /// <summary>
-    /// ConcreteMediator
-    /// </summary>
-    public class TeamChatRoom : IChatRoom
+    public void Send(string from, string message)
     {
-        private readonly Dictionary<string, TeamMember> teamMembers = new();
-
-        public void Register(TeamMember teamMember)
+        foreach (var teamMember in _teamMembers.Values)
         {
-            teamMember.SetChatroom(this);
-            if (!teamMembers.ContainsKey(teamMember.Name))
-            {
-                teamMembers.Add(teamMember.Name, teamMember);
-            }
-        }
-
-        public void Send(string from, string message)
-        {
-            foreach (var teamMember in teamMembers.Values)
-            {
-                teamMember.Receive(from, message);
-            }
-        }
-
-        public void Send(string from, string to, string message)
-        {
-            var teamMember = teamMembers[to];
-            teamMember?.Receive(from, message);
-        }
-
-        public void SendTo<T>(string from, string message) where T : TeamMember
-        {
-            foreach (var teamMember in teamMembers.Values.OfType<T>())
-            {
-                teamMember.Receive(from, message);
-            }
+            teamMember.Receive(from, message);
         }
     }
 
+    public void Send(string from, string to, string message)
+    {
+        var teamMember = _teamMembers[to];
+        teamMember?.Receive(from, message);
+    }
+
+    public void SendTo<T>(string from, string message) where T : TeamMember
+    {
+        foreach (var teamMember in _teamMembers.Values.OfType<T>())
+        {
+            teamMember.Receive(from, message);
+        }
+    }
 }
